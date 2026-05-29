@@ -276,20 +276,17 @@ export function getParticipationSummary(sessions: TeacherSession[]) {
 
 export function createSessionFromSeed(seed: SessionSeed): TeacherSession {
   const transcript = buildTranscript(seed.title, seed.durationSeconds, seed.language);
-  const report = buildReport({
-    id: seed.id,
-    teacherName: 'Anjali Kulkarni',
-    subject: seed.title,
-    className: seed.className,
-    schoolName: seed.schoolName,
-    createdAt: new Date().toISOString(),
-    durationSeconds: seed.durationSeconds,
-    language: seed.language,
-    status: seed.status,
-    offline: seed.offline,
-    transcript,
-    syncAttempts: seed.offline ? 1 : 0,
-  }, seed.score);
+  const report = buildReport(
+    {
+      teacherName: 'Anjali Kulkarni',
+      subject: seed.title,
+      className: seed.className,
+      durationSeconds: seed.durationSeconds,
+      language: seed.language,
+      transcript,
+    },
+    seed.score
+  );
 
   return {
     id: seed.id,

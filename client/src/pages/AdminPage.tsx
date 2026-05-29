@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   AreaChart,
   Area,
@@ -92,6 +93,44 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   };
 
+  const generatePdPlan = () => {
+    const topNeedsSupport = schoolRows
+      .slice()
+      .sort((a, b) => a.growth - b.growth)
+      .slice(0, 3);
+
+    const lines = [
+      '# Disha — Cluster PD Plan (Prototype Export)',
+      '',
+      `Generated: ${new Date().toLocaleString()}`,
+      `Schools in view: ${totalSchools}`,
+      `Sessions in view: ${filteredSessions.length}`,
+      '',
+      '## Priority focus schools',
+      ...topNeedsSupport.map((row, idx) => `${idx + 1}. ${row.school} — Growth ${row.growth}, Inclusion ${row.inclusion}, Participation ${row.participation}%`),
+      '',
+      '## Suggested 45-minute PD agenda',
+      '- 10m: Warm-up: “Wait-time” micro-skill + exemplar video snippet',
+      '- 15m: Practice: open-ended questioning stems (pair rehearsal)',
+      '- 10m: Inclusion routine: equity sticks + cold-call opt-in',
+      '- 10m: Commitment: 1 micro-goal per teacher for next class',
+      '',
+      '## Notes',
+      '- This export is generated from prototype session analytics (not official evaluation).',
+      '- Use the “Report” screens for transcript-specific evidence during coaching.',
+      '',
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'cluster-pd-plan.md';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast.success('PD plan exported');
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -180,7 +219,17 @@ export default function AdminPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4">
-                        <Button variant="ghost" size="sm" className="font-bold text-primary">Details</Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="font-bold text-primary"
+                          onClick={() => {
+                            toast.message(`${row.school}: Growth ${row.growth}, Inclusion ${row.inclusion}, Participation ${row.participation}%`);
+                          }}
+                        >
+                          Details
+                        </Button>
                       </td>
                     </tr>
                   )) : (
@@ -224,7 +273,13 @@ export default function AdminPage() {
                 <p className="text-sm text-white/80 italic mt-1 leading-relaxed">{growthTrend[0] ? `Focus school ${growthTrend[0].school} on open-ended questioning and shared student talk.` : 'Run a student-led logic workshop for the lowest scoring schools.'}</p>
               </div>
             </div>
-            <Button className="w-full bg-white text-primary rounded-xl font-bold mt-2">Generate PD Plan</Button>
+            <Button
+              type="button"
+              className="w-full bg-white text-primary rounded-xl font-bold mt-2"
+              onClick={generatePdPlan}
+            >
+              Generate PD Plan
+            </Button>
           </Card>
         </div>
       </div>

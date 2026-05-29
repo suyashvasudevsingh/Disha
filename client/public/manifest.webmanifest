@@ -1,0 +1,18 @@
+{
+  "name": "Disha",
+  "short_name": "Disha",
+  "description": "Offline-first AI classroom coaching (prototype).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F1EA",
+  "theme_color": "#1FA97A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

@@ -8,6 +8,7 @@ import { buildBenchmarks } from './services/analytics.service';
 import { createGoal, evaluateGoal, listGoalProgress, listGoals, type GoalMetric } from './services/goals.service';
 import { getDemoTeacherProfile, listDemoSessions } from './services/demo.service';
 import { getOrGenerateCoaching } from './services/coaching-engine';
+import { requireAuthIfEnabled } from './middleware/auth';
 
 dotenv.config();
 
@@ -17,6 +18,14 @@ async function startServer() {
   const app = express();
   app.use(express.json());
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
+
+  // Optional auth gate for pilot/prod hardening.
+  // Demo stays functional with ENABLE_SERVER_AUTH=false.
+  app.use('/api', (req, res, next) => {
+    // allow demo bootstrap endpoints without auth
+    if (req.path.startsWith('/demo/')) return next();
+    return requireAuthIfEnabled(req, res, next);
+  });
 
   app.get('/api/demo/profile', (_req, res) => {
     res.json(getDemoTeacherProfile());
@@ -78,7 +87,8 @@ async function startServer() {
   });
 
   app.post("/api/sessions", async (req, res) => {
-    const { id, user_id = 'teacher_001', transcript, duration, report, language = 'en', offline = false } = req.body;
+    const authedUserId = req.auth?.uid;
+    const { id, user_id = authedUserId ?? 'teacher_001', transcript, duration, report, language = 'en', offline = false } = req.body;
 
     const now = new Date().toISOString();
     const sessionReport = report ?? null;
@@ -123,7 +133,7 @@ async function startServer() {
   });
 
   app.post('/api/goals', (req, res) => {
-    const { label, metric, targetValue, sessionId, userId = 'teacher_001' } = req.body ?? {};
+    const { label, metric, targetValue, sessionId, userId = req.auth?.uid ?? 'teacher_001' } = req.body ?? {};
     const goal = createGoal({
       userId,
       sessionId,
@@ -135,7 +145,7 @@ async function startServer() {
   });
 
   app.post('/api/goals/evaluate', (req, res) => {
-    const { userId = 'teacher_001', sessionId, report, transcriptCount = 0 } = req.body ?? {};
+    const { userId = req.auth?.uid ?? 'teacher_001', sessionId, report, transcriptCount = 0 } = req.body ?? {};
     const progress = evaluateGoal({
       userId,
       sessionId,

@@ -1,6 +1,7 @@
-import React, { cloneElement } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -57,9 +58,14 @@ export default function PortfolioPage() {
 
            <div className="flex items-center justify-center md:justify-start gap-4">
               <Button className="bg-white text-primary-dark hover:bg-surface rounded-2xl h-12 px-8 font-bold" onClick={exportPortfolio}>
-                 Export PDF Portfolio
+                 Export Portfolio (JSON)
               </Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-2xl h-12 w-12 p-0">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 rounded-2xl h-12 w-12 p-0"
+                onClick={() => toast.message('Bookmarks are coming soon in the pilot build.')}
+              >
                  <Bookmark />
               </Button>
            </div>
@@ -83,7 +89,14 @@ export default function PortfolioPage() {
         <Card className="rounded-3xl border-primary-light lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-8">
              <h2 className="text-2xl font-display font-bold">Badges & Achievements</h2>
-             <Button variant="ghost" className="text-primary font-bold">View All</Button>
+             <Button
+               type="button"
+               variant="ghost"
+               className="text-primary font-bold"
+               onClick={() => toast.message('All prototype badges are already visible here.')}
+             >
+               View All
+             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
              <BadgeBox icon={<Award className="text-accent" />} title="Inclusion Hero" date="May 2026" />
@@ -135,7 +148,7 @@ function BadgeBox({ icon, title, date }: { icon: React.ReactNode, title: string,
   return (
     <div className="bg-surface rounded-3xl p-6 flex flex-col items-center text-center space-y-3 hover:bg-white border border-transparent hover:border-primary-light transition-all cursor-default">
        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-          {cloneElement(icon as React.ReactElement, { size: 32 })}
+          {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { size: 32 }) : icon}
        </div>
        <div>
          <h4 className="font-bold text-xs tracking-tight">{title}</h4>

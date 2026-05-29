@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import i18n from '@/lib/i18n';
 import { buildReport, createDashboardTrend, createSeedSessions, getParticipationSummary, type AppPreferences, type SupportedLanguage, type TeacherSession } from '@/lib/session-engine';
@@ -61,6 +61,51 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [queueCount, setQueueCount] = useState(0);
   const [consentGiven, setConsentGivenState] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+
+  const queueOfflineSession = useCallback(async (session: TeacherSession, audioBlob?: Blob | null) => {
+    const queueItem: StoredQueueItem = {
+      id: session.id,
+      sessionId: session.id,
+      createdAt: new Date().toISOString(),
+      payload: session,
+      audioBlob,
+    };
+    await saveQueueItem(queueItem);
+    setQueueCount((count) => count + 1);
+    setSyncStatus('offline');
+    toast.message('Queued for offline sync');
+  }, []);
+
+  const syncOfflineQueue = useCallback(async () => {
+    if (isSyncing) {
+      return;
+    }
+
+    setIsSyncing(true);
+    setSyncStatus('syncing');
+    try {
+      const queueItems = await loadQueueItems();
+      for (const item of queueItems) {
+        const session = item.payload as TeacherSession;
+        const saved = await submitSession(session);
+        setSessions((current) =>
+          current.map((existing) =>
+            existing.id === saved.id
+              ? { ...existing, status: 'processing', pending: false, offline: false }
+              : existing
+          )
+        );
+        await removeQueueItem(item.id);
+      }
+      setQueueCount(0);
+      setSyncStatus('idle');
+      toast.success('Offline queue synced');
+    } catch {
+      setSyncStatus('error');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isSyncing]);
 
   useEffect(() => {
     let mounted = true;
@@ -223,43 +268,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       return finalized;
     },
-    queueOfflineSession: async (session, audioBlob) => {
-      const queueItem: StoredQueueItem = {
-        id: session.id,
-        sessionId: session.id,
-        createdAt: new Date().toISOString(),
-        payload: session,
-        audioBlob,
-      };
-      await saveQueueItem(queueItem);
-      setQueueCount((count) => count + 1);
-      setSyncStatus('offline');
-      toast.message('Queued for offline sync');
-    },
-    syncOfflineQueue: async () => {
-      if (isSyncing) {
-        return;
-      }
-
-      setIsSyncing(true);
-      setSyncStatus('syncing');
-      try {
-        const queueItems = await loadQueueItems();
-        for (const item of queueItems) {
-          const session = item.payload as TeacherSession;
-          const saved = await submitSession(session);
-          setSessions((current) => current.map((existing) => existing.id === saved.id ? { ...existing, status: 'processing', pending: false, offline: false } : existing));
-          await removeQueueItem(item.id);
-        }
-        setQueueCount(0);
-        setSyncStatus('idle');
-        toast.success('Offline queue synced');
-      } catch {
-        setSyncStatus('error');
-      } finally {
-        setIsSyncing(false);
-      }
-    },
+    queueOfflineSession,
+    syncOfflineQueue,
     getSessionById: (sessionId) => sessions.find((session) => session.id === sessionId),
     getDashboardTrend: () => createDashboardTrend(sessions),
     getParticipation: () => getParticipationSummary(sessions),
@@ -281,7 +291,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         throw err;
       }
     },
-  }), [activeSessionId, consentGiven, demoMode, isHydrating, isSyncing, preferences, queueCount, sessions, syncStatus]);
+  }), [activeSessionId, consentGiven, demoMode, isHydrating, isSyncing, preferences, queueCount, queueOfflineSession, sessions, syncOfflineQueue, syncStatus]);
 
   return <AppContext.Provider value={store}>{children}</AppContext.Provider>;
 }

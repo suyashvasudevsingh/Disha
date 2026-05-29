@@ -2,9 +2,14 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/state/auth';
 
 export function ProtectedRoute() {
+  const bypassAuth = import.meta.env.VITE_DEMO_BYPASS_AUTH === 'true';
   const location = useLocation();
   const status = useAuthStore((state) => state.status);
   const user = useAuthStore((state) => state.user);
+
+  if (bypassAuth) {
+    return <Outlet />;
+  }
 
   if (status === 'checking') {
     return <FullPageState label="Checking session..." />;
@@ -18,8 +23,13 @@ export function ProtectedRoute() {
 }
 
 export function GuestRoute() {
+  const bypassAuth = import.meta.env.VITE_DEMO_BYPASS_AUTH === 'true';
   const status = useAuthStore((state) => state.status);
   const user = useAuthStore((state) => state.user);
+
+  if (bypassAuth) {
+    return <Outlet />;
+  }
 
   if (status === 'checking') {
     return <FullPageState label="Loading authentication..." />;

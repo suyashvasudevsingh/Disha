@@ -1,8 +1,22 @@
 import { buildReport, createSeedSessions, type AppPreferences, type BenchmarkCard, type TeacherSession } from './session-engine';
+import { useAuthStore } from '@/state/auth';
+
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const token = useAuthStore.getState().user?.accessToken;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
 
 export async function fetchSessions(): Promise<TeacherSession[]> {
   try {
-    const response = await fetch('/api/sessions');
+    const response = await fetch('/api/sessions', {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
     if (!response.ok) {
       throw new Error('Failed to load sessions');
     }
@@ -19,10 +33,10 @@ export async function submitSession(session: TeacherSession): Promise<TeacherSes
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify({
         id: session.id,
-        user_id: 'teacher_001',
         transcript: JSON.stringify(session.transcript),
         duration: session.durationSeconds,
         report: session.report ?? buildReport(session),
@@ -69,7 +83,11 @@ export async function fetchDemoSessions(): Promise<TeacherSession[]> {
 }
 
 export async function fetchConsent() {
-  const response = await fetch('/api/consent');
+  const response = await fetch('/api/consent', {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
   if (!response.ok) {
     throw new Error('Failed to load consent');
   }
@@ -81,13 +99,18 @@ export async function saveConsent(consentGiven: boolean, consentText: string, la
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({ consentGiven, consentText, language, userId: 'teacher_001' }),
   });
 }
 
 export async function fetchSessionBenchmarks(sessionId: string): Promise<BenchmarkCard[]> {
-  const response = await fetch(`/api/benchmarks/${sessionId}`);
+  const response = await fetch(`/api/benchmarks/${sessionId}`, {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
   if (!response.ok) {
     return [];
   }
@@ -101,6 +124,7 @@ export async function createCoachingGoal(input: { label: string; metric: 'teache
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({ ...input, userId: 'teacher_001' }),
   });
@@ -162,6 +186,7 @@ export async function regenerateSessionCoaching(sessionId: string, language: str
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({ language }),
   });

@@ -19,7 +19,7 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const authStatus = useAuthStore((state) => state.status);
   const setPendingPhone = useAuthStore((state) => state.setPendingPhone);
-  const { cycleLanguage } = useAppState();
+  const { cycleLanguage, enableDemoMode } = useAppState();
 
   useEffect(() => {
     if (authStatus === 'authenticated') {
@@ -101,6 +101,30 @@ export default function LandingPage() {
                 {isLoading ? 'Sending OTP...' : 'Continue with OTP'}
               </Button>
             </form>
+
+            <div className="mt-4 pt-4 border-t border-primary-light/70 space-y-3">
+              <p className="text-xs text-ink/55 leading-relaxed">
+                Running a judge demo? You can enter with a pre-seeded dataset without OTP when demo bypass is enabled.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 rounded-2xl border-primary-light text-primary font-semibold"
+                onClick={async () => {
+                  try {
+                    await enableDemoMode();
+                    navigate('/dashboard');
+                  } catch (error) {
+                    toast.error('Could not load demo dataset.');
+                  }
+                }}
+              >
+                Try demo dataset (no OTP)
+              </Button>
+              <p className="text-[10px] text-ink/45">
+                Requires <span className="font-semibold">VITE_DEMO_BYPASS_AUTH=true</span> for protected routes.
+              </p>
+            </div>
           </Card>
         </motion.div>
 
