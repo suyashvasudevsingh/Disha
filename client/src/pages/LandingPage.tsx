@@ -8,33 +8,33 @@ import { useAppState } from '@/state/app-state';
 import { supportedLanguageLabels } from '@/lib/i18n-languages';
 import { BarChart3, Globe, UserCheck, Zap } from 'lucide-react';
 
-const features = [
-  {
-    icon: <Zap className="text-emerald-600" />,
-    title: 'AI Teaching Insights',
-    desc: 'Understand classroom patterns, student engagement, and instructional strengths after every lesson.',
-  },
-  {
-    icon: <BarChart3 className="text-emerald-600" />,
-    title: 'Classroom Analytics',
-    desc: 'Track attendance, participation, and speaking balance with clear visual reports.',
-  },
-  {
-    icon: <UserCheck className="text-emerald-600" />,
-    title: 'Personalized Coaching',
-    desc: 'Receive tailored recommendations to improve pacing, questioning, and feedback strategies.',
-  },
-  {
-    icon: <Globe className="text-emerald-600" />,
-    title: 'Multilingual Support',
-    desc: 'Built for diverse classrooms with support for multiple teaching languages and curriculums.',
-  },
-];
-
 export default function LandingPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { cycleLanguage } = useAppState();
+
+  const features = [
+    {
+      icon: <Zap className="text-emerald-600" />,
+      title: t('landing_feature_1_title'),
+      desc: t('landing_feature_1_desc'),
+    },
+    {
+      icon: <BarChart3 className="text-emerald-600" />,
+      title: t('landing_feature_2_title'),
+      desc: t('landing_feature_2_desc'),
+    },
+    {
+      icon: <UserCheck className="text-emerald-600" />,
+      title: t('landing_feature_3_title'),
+      desc: t('landing_feature_3_desc'),
+    },
+    {
+      icon: <Globe className="text-emerald-600" />,
+      title: t('landing_feature_4_title'),
+      desc: t('landing_feature_4_desc'),
+    },
+  ];
 
   const toggleLanguage = async () => {
     cycleLanguage();
@@ -72,12 +72,12 @@ export default function LandingPage() {
           transition={{ duration: 0.65 }}
         >
           <div className="mx-auto max-w-2xl w-full">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600 mb-4">Classroom intelligence</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600 mb-4">{t('classroom_intelligence')}</p>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-slate-950 leading-tight">
-              AI-Powered Classroom Intelligence for Teachers
+              {t('landing_main_headline')}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-slate-600">
-              Receive actionable teaching insights, classroom analytics, and personalized coaching after every lesson.
+              {t('landing_subtitle')}
             </p>
 
             <div className="mt-8">
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-base font-semibold shadow-lg shadow-emerald-600/20 transition-all"
                 onClick={() => navigate('/dashboard')}
               >
-                Get Started
+                {t('landing_get_started')}
               </Button>
             </div>
           </div>
