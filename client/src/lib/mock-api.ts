@@ -1,39 +1,28 @@
 import { buildReport, createSeedSessions, type AppPreferences, type BenchmarkCard, type TeacherSession } from './session-engine';
-import { useAuthStore } from '@/state/auth';
-
-function getAuthHeaders(): Record<string, string> {
-  try {
-    const token = useAuthStore.getState().user?.accessToken;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  } catch {
-    return {};
-  }
-}
 
 export async function fetchSessions(): Promise<TeacherSession[]> {
   try {
-    const response = await fetch('/api/sessions', {
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
+    console.log('[MockAPI] fetchSessions called');
+    const response = await fetch('/api/sessions');
     if (!response.ok) {
       throw new Error('Failed to load sessions');
     }
     const sessions = await response.json();
+    console.log('[MockAPI] fetchSessions received', { count: Array.isArray(sessions) ? sessions.length : 0 });
     return Array.isArray(sessions) && sessions.length > 0 ? sessions.map(normalizeSession) : createSeedSessions();
-  } catch {
+  } catch (error) {
+    console.error('[MockAPI] fetchSessions failed', error);
     return createSeedSessions();
   }
 }
 
 export async function submitSession(session: TeacherSession): Promise<TeacherSession> {
   try {
+    console.log('[MockAPI] submitSession called', { sessionId: session.id, offline: session.offline, reportExists: Boolean(session.report) });
     const response = await fetch('/api/sessions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeaders(),
       },
       body: JSON.stringify({
         id: session.id,
@@ -48,13 +37,15 @@ export async function submitSession(session: TeacherSession): Promise<TeacherSes
     if (!response.ok) {
       throw new Error('Failed to save session');
     }
+    console.log('[MockAPI] submitSession succeeded', { sessionId: session.id });
 
     return {
       ...session,
       status: 'processing',
       pending: false,
     };
-  } catch {
+  } catch (error) {
+    console.error('[MockAPI] submitSession failed', error, { sessionId: session.id });
     return {
       ...session,
       status: 'queued',
@@ -83,11 +74,7 @@ export async function fetchDemoSessions(): Promise<TeacherSession[]> {
 }
 
 export async function fetchConsent() {
-  const response = await fetch('/api/consent', {
-    headers: {
-      ...getAuthHeaders(),
-    },
-  });
+  const response = await fetch('/api/consent');
   if (!response.ok) {
     throw new Error('Failed to load consent');
   }
@@ -99,18 +86,13 @@ export async function saveConsent(consentGiven: boolean, consentText: string, la
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
     },
     body: JSON.stringify({ consentGiven, consentText, language, userId: 'teacher_001' }),
   });
 }
 
 export async function fetchSessionBenchmarks(sessionId: string): Promise<BenchmarkCard[]> {
-  const response = await fetch(`/api/benchmarks/${sessionId}`, {
-    headers: {
-      ...getAuthHeaders(),
-    },
-  });
+  const response = await fetch(`/api/benchmarks/${sessionId}`);
   if (!response.ok) {
     return [];
   }
@@ -124,7 +106,6 @@ export async function createCoachingGoal(input: { label: string; metric: 'teache
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
     },
     body: JSON.stringify({ ...input, userId: 'teacher_001' }),
   });
@@ -186,7 +167,6 @@ export async function regenerateSessionCoaching(sessionId: string, language: str
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeaders(),
     },
     body: JSON.stringify({ language }),
   });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -29,9 +29,19 @@ export default function ReportPage() {
   const { id } = useParams();
   useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { getSessionById, isHydrating, preferences, regenerateCoaching } = useAppState();
-  const session = id ? getSessionById(id) : undefined;
+  console.log('[ReportPage] mounted', { sessionId: id, navigationState: location.state });
+  const sessionFromState = location.state && typeof location.state === 'object' && 'session' in location.state ? (location.state as any).session : undefined;
+  const session = id ? getSessionById(id) ?? sessionFromState : undefined;
+  if (sessionFromState && !getSessionById(id)) {
+    console.log('[ReportPage] session found in navigation state', { sessionId: sessionFromState.id });
+  }
+  if (session) {
+    console.log('[ReportPage] session found', { sessionId: session.id, fromState: session === sessionFromState });
+  }
   const report = session?.report;
+  console.log('[ReportPage] report loaded', { reportExists: Boolean(report), sessionId: id, sessionFound: Boolean(session) });
   const showFallbackBadge = Boolean(
     session?.transcriptionMeta?.fallbackUsed
       || session?.transcriptionMeta?.sources?.includes('browser-fallback')
@@ -174,6 +184,8 @@ export default function ReportPage() {
       </div>
     );
   }
+
+  console.log('[ReportPage] report rendered', { sessionId: session.id, reportReady: Boolean(report), finalScore: report.finalScore });
 
   const scoreCards = [
     { title: 'Final Score', value: `${animatedScore}`, trend: `+${Math.max(1, animatedScore - 72)}`, icon: <TrendingUp className="text-primary" /> },
@@ -393,11 +405,16 @@ export default function ReportPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-4 relative z-10">
-                  <Badge className="bg-white/20 text-white border-none font-bold">✨ Gemini 1.5 Flash</Badge>
                   {report.aiCoaching.isFallback ? (
-                    <Badge className="bg-amber-500/30 text-amber-200 border-none font-semibold">Rule-based fallback mode</Badge>
+                    <>
+                      <Badge className="bg-amber-500/40 text-amber-100 border-none font-bold">⚠ Heuristic Coaching</Badge>
+                      <Badge className="bg-amber-500/20 text-amber-200 border-none font-semibold">Fallback mode (AI unavailable)</Badge>
+                    </>
                   ) : (
-                    <Badge className="bg-emerald-500/30 text-emerald-200 border-none font-semibold">AI-generated coaching suggestions</Badge>
+                    <>
+                      <Badge className="bg-white/20 text-white border-none font-bold">✨ Gemini 1.5 Flash</Badge>
+                      <Badge className="bg-emerald-500/30 text-emerald-200 border-none font-semibold">AI-generated analysis</Badge>
+                    </>
                   )}
                   <Badge className="bg-white/10 text-white border-none text-[10px] uppercase font-bold">Language: {report.aiCoaching.language}</Badge>
                 </div>

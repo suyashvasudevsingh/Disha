@@ -1,21 +1,17 @@
 import React from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Mic, User, Globe, WifiOff, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppState } from '@/state/app-state';
-import { useAuthStore } from '@/state/auth';
 import { supportedLanguageLabels } from '@/lib/i18n-languages';
 
 export const Layout = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const { cycleLanguage, preferences, syncStatus, queueCount, toggleHighContrast } = useAppState();
-  const signOutUser = useAuthStore((state) => state.signOutUser);
-  const user = useAuthStore((state) => state.user);
-  const navigate = useNavigate();
 
   const toggleLanguage = () => {
     cycleLanguage();
@@ -40,11 +36,6 @@ export const Layout = () => {
             <Mic className="text-white w-5 h-5" />
           </div>
           <h1 className="text-2xl font-display font-bold text-primary-dark">Disha</h1>
-        </div>
-
-        <div className="mb-6 space-y-2 px-1">
-          <Badge variant="outline" className="w-fit rounded-full border-primary-light text-[10px]">Prototype v1</Badge>
-          <Badge variant="secondary" className="w-fit rounded-full text-[10px]">Offline Whisper integration in progress</Badge>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -82,16 +73,6 @@ export const Layout = () => {
           </Button>
           <Button variant="outline" onClick={toggleHighContrast} className="w-full rounded-2xl border-primary-light text-ink/60">
             High contrast
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={async () => {
-              await signOutUser();
-              navigate('/', { replace: true });
-            }}
-            className="w-full rounded-2xl text-ink/60"
-          >
-            Sign out{user?.phoneNumber ? ` · ${user.phoneNumber}` : ''}
           </Button>
         </div>
       </aside>

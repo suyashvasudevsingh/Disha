@@ -139,6 +139,7 @@ export function buildTranscript(title: string, durationSeconds: number, language
 
 export function buildReport(session: Pick<TeacherSession, 'subject' | 'className' | 'teacherName' | 'durationSeconds' | 'language' | 'transcript'>, baselineScore?: number): SessionReport {
   const transcript = session.transcript || [];
+  console.log('[SessionEngine] buildReport invoked', { subject: session.subject, durationSeconds: session.durationSeconds, transcriptCount: transcript.length, language: session.language });
   const teacherLines = transcript.filter((line) => line.speaker === 'teacher').length;
   const studentLines = transcript.filter((line) => line.speaker === 'student').length;
 

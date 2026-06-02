@@ -13,7 +13,6 @@ import { useAudioRecorder } from '@/hooks/use-audio-recorder';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { CloudOff, Cpu, Info, Mic, MicOff, Pause, Play, Square, Waves } from 'lucide-react';
 import LiveTranscriptFeed from '@/stt/ui/LiveTranscriptFeed';
-import { useAuthStore } from '@/state/auth';
 
 const TranscriptionView = lazy(() => import('@/stt/ui/TranscriptionView'));
 
@@ -27,9 +26,6 @@ export default function RecordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { preferences, startSession, finalizeSession, syncStatus, queueCount, updateSession } = useAppState();
-  
-  const authUser = useAuthStore((state) => state.user);
-  const authStatus = useAuthStore((state) => state.status);
   
   const [micPermission, setMicPermission] = useState<'prompt' | 'granted' | 'denied' | 'unsupported'>('prompt');
 
@@ -76,6 +72,7 @@ export default function RecordPage() {
   const speech = useSpeechRecognition({
     language: preferences.language,
     onLineRecognized: (newLine) => {
+      console.log('[RecordPage] transcript received', newLine, { sessionId: sessionIdRef.current });
       setTranscript((current) => {
         const nextTranscript = [...current, newLine];
         transcriptRef.current = nextTranscript;
@@ -89,6 +86,7 @@ export default function RecordPage() {
 
   const recorder = useAudioRecorder({
     onStopRecording: async ({ url, blob }) => {
+      console.log('[RecordPage] recording stopped', { sessionId: sessionIdRef.current, blobSize: blob?.size });
       if (!sessionIdRef.current) {
         return;
       }
@@ -99,6 +97,7 @@ export default function RecordPage() {
       const finalTranscript = transcriptRef.current.length > 0
         ? transcriptRef.current
         : buildFallbackTranscript(preferences.language);
+      console.log('[RecordPage] final transcript prepared', { sessionId: sessionIdRef.current, lineCount: finalTranscript.length, isFallback: transcriptRef.current.length === 0 });
       const isPending = !speech.isSupported || finalTranscript.length === 0;
 
       const finalized = await finalizeSession(
@@ -108,6 +107,7 @@ export default function RecordPage() {
         url,
         buildTranscriptionMeta(finalTranscript)
       );
+      console.log('[RecordPage] finalizeSession completed', { sessionId: sessionIdRef.current, finalizedId: finalized?.id, status: finalized?.status });
       
       setProcessingSession(false);
 
@@ -117,7 +117,9 @@ export default function RecordPage() {
         } else {
           toast.success('Session analyzed and saved');
         }
-        navigate(`/report/${finalized.id}`);
+        console.log('[RecordPage] session stored', { sessionId: finalized.id });
+        console.log('[RecordPage] navigate triggered', `/report/${finalized.id}`, { sessionId: finalized.id });
+        navigate(`/report/${finalized.id}`, { state: { session: finalized } });
       }
     },
   });
@@ -205,30 +207,12 @@ export default function RecordPage() {
   const offlineState = syncStatus === 'offline' || queueCount > 0;
   const fallbackMode = !speech.isSupported || Boolean(speech.error) || Boolean(recorder.error);
   const statusLabel = recorder.isRecording
-    ? 'Live analysis'
+    ? (speech.isSupported ? 'Live speech recognition' : 'Recording with fallback transcript')
     : recorder.isPaused
       ? 'Paused'
       : processingSession
         ? 'Processing'
-        : 'Ready';
-
-  if (authStatus === 'checking') {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 bg-surface/30 rounded-[32px]">
-        <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
-        <p className="text-sm font-semibold text-ink/65">Verifying credentials...</p>
-      </div>
-    );
-  }
-
-  if (!authUser) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 bg-surface/30 rounded-[32px]">
-        <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
-        <p className="text-sm font-semibold text-ink/65">Redirecting to login...</p>
-      </div>
-    );
-  }
+        : (speech.isSupported ? 'Ready for live transcription' : 'Ready for fallback transcript');
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -305,8 +289,13 @@ export default function RecordPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-ink/30">Session control</p>
               <h2 className="text-xl font-display font-bold">{sessionTemplate.subject}</h2>
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-ink/50">
-              <Cpu size={15} /> AI pipeline ready
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2 text-xs font-semibold text-ink/50">
+                <Cpu size={15} /> {speech.isSupported ? 'Speech recognition ready' : 'Using fallback transcript'}
+              </div>
+              {!speech.isSupported && (
+                <p className="text-[10px] text-amber-600">Browser doesn't support STT</p>
+              )}
             </div>
           </CardHeader>
 
@@ -398,11 +387,11 @@ export default function RecordPage() {
 
               <details className="mt-5 rounded-3xl border border-primary-light bg-white p-4 shadow-sm">
                 <summary className="cursor-pointer list-none text-sm font-semibold text-ink/75">
-                  Offline Whisper integration in progress
+                  🔧 Advanced: Transcription diagnostics (diagnostic only - not used for classroom reports)
                 </summary>
                 <div className="mt-4 space-y-3">
                   <p className="text-sm text-ink/60">
-                    This diagnostic panel is kept separate from the classroom transcript stream so the demo stays readable.
+                    This diagnostic panel allows testing of on-device transcription features. Classroom reports use the live transcript feed above instead. This is kept separate to ensure demo reliability.
                   </p>
                   {sessionId ? (
                     <Suspense fallback={<div className="rounded-2xl bg-surface px-4 py-3 text-sm text-ink/60">Loading Whisper diagnostics...</div>}>

@@ -240,10 +240,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     finalizeSession: async (sessionId, durationSeconds, transcript, audioUrl, transcriptionMeta, sessionOverride) => {
       const currentSession = sessions.find((session) => session.id === sessionId) ?? sessionOverride;
       if (!currentSession) {
+        console.log('[AppState] finalizeSession missing currentSession', { sessionId });
         return null;
       }
 
       const report = buildReport({ ...currentSession, durationSeconds, transcript });
+      console.log('[AppState] analytics generated', { sessionId, durationSeconds, transcriptCount: transcript.length, finalScore: report.finalScore });
       const finalized: TeacherSession = {
         ...currentSession,
         durationSeconds,
@@ -258,11 +260,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       setSessions((current) => current.map((session) => session.id === sessionId ? finalized : session));
       setActiveSessionId(sessionId);
+      console.log('[AppState] report created', { sessionId, status: finalized.status, offline: finalized.offline });
 
       if (!navigator.onLine) {
         await queueOfflineSession(finalized, null);
         toast.message('Recording saved offline. It will sync when you are back online.');
       } else {
+        console.log('[AppState] report saving to server', { sessionId, status: finalized.status });
         void submitSession(finalized);
       }
 

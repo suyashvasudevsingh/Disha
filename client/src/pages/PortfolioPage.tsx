@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Award, Calendar, FileText, Download, 
@@ -58,13 +58,13 @@ export default function PortfolioPage() {
 
            <div className="flex items-center justify-center md:justify-start gap-4">
               <Button className="bg-white text-primary-dark hover:bg-surface rounded-2xl h-12 px-8 font-bold" onClick={exportPortfolio}>
-                 Export Portfolio (JSON)
+                 Export Portfolio Data
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="border-white/20 text-white hover:bg-white/10 rounded-2xl h-12 w-12 p-0"
-                onClick={() => toast.message('Bookmarks are coming soon in the pilot build.')}
+                 onClick={() => toast.message('Bookmarks are coming soon.')}
               >
                  <Bookmark />
               </Button>
@@ -93,7 +93,7 @@ export default function PortfolioPage() {
                type="button"
                variant="ghost"
                className="text-primary font-bold"
-               onClick={() => toast.message('All prototype badges are already visible here.')}
+               onClick={() => toast.message('All badges are already visible here.')}
              >
                View All
              </Button>

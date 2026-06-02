@@ -8,7 +8,6 @@ import { buildBenchmarks } from './services/analytics.service';
 import { createGoal, evaluateGoal, listGoalProgress, listGoals, type GoalMetric } from './services/goals.service';
 import { getDemoTeacherProfile, listDemoSessions } from './services/demo.service';
 import { getOrGenerateCoaching } from './services/coaching-engine';
-import { requireAuthIfEnabled } from './middleware/auth';
 
 dotenv.config();
 
@@ -18,14 +17,6 @@ async function startServer() {
   const app = express();
   app.use(express.json());
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
-
-  // Optional auth gate for pilot/prod hardening.
-  // Demo stays functional with ENABLE_SERVER_AUTH=false.
-  app.use('/api', (req, res, next) => {
-    // allow demo bootstrap endpoints without auth
-    if (req.path.startsWith('/demo/')) return next();
-    return requireAuthIfEnabled(req, res, next);
-  });
 
   app.get('/api/demo/profile', (_req, res) => {
     res.json(getDemoTeacherProfile());
@@ -87,8 +78,8 @@ async function startServer() {
   });
 
   app.post("/api/sessions", async (req, res) => {
-    const authedUserId = req.auth?.uid;
-    const { id, user_id = authedUserId ?? 'teacher_001', transcript, duration, report, language = 'en', offline = false } = req.body;
+    const { id, user_id = 'teacher_001', transcript, duration, report, language = 'en', offline = false } = req.body;
+    console.log('[Server] /api/sessions received', { id, user_id, language, offline, hasReport: Boolean(report) });
 
     const now = new Date().toISOString();
     const sessionReport = report ?? null;
@@ -97,6 +88,7 @@ async function startServer() {
     db.prepare("INSERT OR REPLACE INTO sessions (id, user_id, transcript, duration, status, date, report_json, language, offline, benchmark_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
       .run(id, user_id, transcript, duration, normalizedReport ? 'completed' : 'processing', now, normalizedReport ? JSON.stringify(normalizedReport) : null, language, offline ? 1 : 0, benchmarks ? JSON.stringify(benchmarks) : null);
 
+    console.log('[Server] report saved', { id, status: normalizedReport ? 'completed' : 'processing', benchmarkCount: benchmarks?.length ?? 0 });
     res.json({ status: normalizedReport ? 'completed' : 'processing', benchmarks });
 
     if (!normalizedReport) {
@@ -133,7 +125,7 @@ async function startServer() {
   });
 
   app.post('/api/goals', (req, res) => {
-    const { label, metric, targetValue, sessionId, userId = req.auth?.uid ?? 'teacher_001' } = req.body ?? {};
+    const { label, metric, targetValue, sessionId, userId = 'teacher_001' } = req.body ?? {};
     const goal = createGoal({
       userId,
       sessionId,
@@ -145,7 +137,7 @@ async function startServer() {
   });
 
   app.post('/api/goals/evaluate', (req, res) => {
-    const { userId = req.auth?.uid ?? 'teacher_001', sessionId, report, transcriptCount = 0 } = req.body ?? {};
+    const { userId = 'teacher_001', sessionId, report, transcriptCount = 0 } = req.body ?? {};
     const progress = evaluateGoal({
       userId,
       sessionId,
@@ -258,6 +250,7 @@ async function startServer() {
   });
 
   async function analyzeSession(sessionId: string, transcript: string, durationSeconds?: number, userId = 'teacher_001', language: string = 'en') {
+    console.log('[Server] analyzeSession started', { sessionId, durationSeconds, userId, language });
     try {
       let lines: any[] = [];
       try {
@@ -282,9 +275,11 @@ async function startServer() {
       } as any;
 
       const reportObj = buildReport(sessionLike);
+      console.log('[Server] analytics generated in analyzeSession', { sessionId, transcriptLines: lines.length, finalScore: reportObj.finalScore });
       
       // Dynamic Gemini coaching analysis with retry and cached language fallbacks
       const aiCoaching = await getOrGenerateCoaching(sessionLike, language);
+      console.log('[Server] coaching generated', { sessionId, isFallback: aiCoaching.isFallback, confidence: aiCoaching.confidence });
       reportObj.aiCoaching = aiCoaching;
 
       const reportJson = JSON.stringify(reportObj);
@@ -297,6 +292,7 @@ async function startServer() {
       });
 
       db.prepare("UPDATE sessions SET report_json = ?, status = 'completed', benchmark_json = ?, goal_json = ? WHERE id = ?").run(reportJson, JSON.stringify(benchmarks), JSON.stringify(goalProgress), sessionId);
+      console.log('[Server] analysis completed and report saved', { sessionId, finalScore: reportObj.finalScore });
     } catch (error) {
       console.error("Analysis failed:", error);
       db.prepare("UPDATE sessions SET status = 'failed' WHERE id = ?").run(sessionId);

@@ -19,6 +19,7 @@ vi.mock('react-router-dom', () => ({
     navigateHandler?.(path);
   },
   useParams: () => ({ id: reportIdFromNavigate }),
+  useLocation: () => ({ pathname: '/record' }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -27,13 +28,6 @@ vi.mock('react-i18next', () => ({
     i18n: {
       changeLanguage: async () => {},
     },
-  }),
-}));
-
-vi.mock('@/state/auth', () => ({
-  useAuthStore: (selector: any) => selector({
-    user: { uid: 'test-uid', phoneNumber: '+919999999999' },
-    status: 'authenticated',
   }),
 }));
 
