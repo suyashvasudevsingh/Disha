@@ -57,7 +57,7 @@ export default function Dashboard() {
 
   const inclusionScore = latestReport?.inclusionScore;
   const activeSessions = sessions.filter((session) => session.status === 'completed').length;
-  const rangeLabel = preferences.dashboardRange === 'week' ? 'Last 7 days' : 'This month';
+  const rangeLabel = preferences.dashboardRange === 'week' ? t('dashboard_last_7_days') : t('dashboard_this_month');
 
   const speakTip = (text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -77,12 +77,12 @@ export default function Dashboard() {
             <Badge className="rounded-full bg-primary-light text-primary border-none px-3 py-1">{t('welcome')}</Badge>
             {(syncStatus === 'offline' || queueCount > 0) && (
               <Badge variant="secondary" className="rounded-full px-3 py-1">
-                <WifiOff size={14} className="mr-1" /> {queueCount} queued offline
+                <WifiOff size={14} className="mr-1" /> {queueCount} {t('queued')} {t('offline_mode')}
               </Badge>
             )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-ink">Dashboard</h1>
-          <p className="text-ink/60 max-w-2xl">Track session outcomes, participation balance, and coaching insights with transparent prototype-safe indicators.</p>
+          <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-ink">{t('dashboard_title')}</h1>
+          <p className="text-ink/60 max-w-2xl">{t('dashboard_subtitle')}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-primary-light bg-white p-2 shadow-sm">
@@ -91,14 +91,14 @@ export default function Dashboard() {
             className="rounded-2xl px-4"
             onClick={() => setDashboardRange('week')}
           >
-            Week
+            {t('dashboard_range_week')}
           </Button>
           <Button
             variant={preferences.dashboardRange === 'month' ? 'default' : 'ghost'}
             className="rounded-2xl px-4"
             onClick={() => setDashboardRange('month')}
           >
-            Month
+            {t('dashboard_range_month')}
           </Button>
           <div className="px-3 py-2 text-xs font-semibold text-ink/50">{rangeLabel}</div>
         </div>
@@ -138,7 +138,7 @@ export default function Dashboard() {
               <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center text-primary">
                 <Users size={24} />
               </div>
-              <Badge variant="outline" className="rounded-full border-primary/20 text-primary">Inclusion rising</Badge>
+              <Badge variant="outline" className="rounded-full border-primary/20 text-primary">{t('dashboard_inclusion_badge')}</Badge>
             </div>
             <div>
               <h3 className="text-ink/60 font-medium mb-1">{t('inclusion_score')}</h3>
@@ -149,7 +149,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <p className="text-sm text-ink/50">{latestReport?.summary ?? 'Latest session summary will appear here after the next recording.'}</p>
+            <p className="text-sm text-ink/50">{latestReport?.summary ?? t('dashboard_coaching_placeholder')}</p>
           </CardContent>
         </Card>
 
@@ -159,13 +159,13 @@ export default function Dashboard() {
               <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-accent">
                 <TrendingUp size={24} />
               </div>
-              <Badge variant="secondary" className="rounded-full">{activeSessions} completed</Badge>
+              <Badge variant="secondary" className="rounded-full">{activeSessions} {t('dashboard_completed_sessions')}</Badge>
             </div>
             <div>
-              <h3 className="text-ink/60 font-medium mb-1">Participation</h3>
+              <h3 className="text-ink/60 font-medium mb-1">{t('dashboard_participation')}</h3>
               <div className="flex items-center gap-2">
                 <span className="text-4xl font-display font-bold">{latestReport ? `${latestReport.talkRatio.student}%` : '--'}</span>
-                <p className="text-xs text-ink/40">Student voice-time increased from the previous session.</p>
+                <p className="text-xs text-ink/40">{t('dashboard_participation_note')}</p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs text-ink/50">
@@ -186,7 +186,7 @@ export default function Dashboard() {
         <div className="space-y-6 min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-2xl font-display font-bold">{t('recent_sessions')}</h2>
-            <Button variant="ghost" className="text-primary font-bold" onClick={() => navigate('/portfolio')}>View History</Button>
+            <Button variant="ghost" className="text-primary font-bold" onClick={() => navigate('/portfolio')}>{t('dashboard_view_history')}</Button>
           </div>
 
           <div className="space-y-4">
@@ -229,16 +229,16 @@ export default function Dashboard() {
             ))}
             {sortedSessions.length === 0 && (
               <Card className="rounded-[28px] border-primary-light bg-white p-5 shadow-sm">
-                <p className="text-sm text-ink/65">No sessions yet. Start one recording to generate your first report.</p>
-                <Button className="mt-3 rounded-2xl" onClick={() => navigate('/record')}>Start recording</Button>
+                <p className="text-sm text-ink/65">{t('dashboard_no_sessions')}</p>
+                <Button className="mt-3 rounded-2xl" onClick={() => navigate('/record')}>{t('dashboard_start_recording_btn')}</Button>
               </Card>
             )}
           </div>
 
           <Card className="rounded-[28px] border-primary-light bg-white shadow-sm overflow-hidden">
             <CardHeader className="flex items-center justify-between gap-3 border-b border-primary-light/70 px-5 py-4">
-              <CardTitle className="text-xl font-bold flex items-center gap-2"><ArrowUpRight size={18} className="text-primary" /> Trend updates</CardTitle>
-              <Badge variant="secondary" className="rounded-full">{syncStatus === 'offline' ? 'Offline snapshot' : 'Live snapshot'}</Badge>
+              <CardTitle className="text-xl font-bold flex items-center gap-2"><ArrowUpRight size={18} className="text-primary" /> {t('dashboard_trend_heading')}</CardTitle>
+              <Badge variant="secondary" className="rounded-full">{syncStatus === 'offline' ? t('dashboard_offline_snapshot') : t('dashboard_live_snapshot')}</Badge>
             </CardHeader>
             <CardContent className="p-5">
               <div className="h-65 w-full">
@@ -259,8 +259,8 @@ export default function Dashboard() {
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <Brain className="text-primary" />
-            <h2 className="text-2xl font-display font-bold leading-none">Coaching</h2>
-            <Badge variant="outline" className="rounded-full border-primary-light text-[10px]">AI-generated coaching suggestions</Badge>
+            <h2 className="text-2xl font-display font-bold leading-none">{t('coaching')}</h2>
+            <Badge variant="outline" className="rounded-full border-primary-light text-[10px]">{t('coaching_suggestions')}</Badge>
           </div>
 
           <Card className="rounded-[28px] border-none bg-white p-6 shadow-xl shadow-ink/5 border border-primary-light relative overflow-hidden">
@@ -269,11 +269,11 @@ export default function Dashboard() {
                 <Sparkles className="text-accent" size={20} />
               </div>
               <p className="font-medium text-sm text-ink/80 leading-relaxed italic">
-                {latestReport?.coachingTips[0]?.detail ?? 'Your next coaching card will appear after the first analyzed session.'}
+                {latestReport?.coachingTips[0]?.detail ?? t('dashboard_coaching_placeholder_2')}
               </p>
             </div>
-            <Button variant="outline" className="w-full rounded-2xl border-primary-light text-primary py-6 font-bold shadow-sm" onClick={() => speakTip(latestReport?.coachingTips[0]?.voiceNote ?? 'Keep asking open-ended questions to invite more student thinking.') }>
-              <PlayCircle size={18} className="mr-2" /> Play coaching note
+            <Button variant="outline" className="w-full rounded-2xl border-primary-light text-primary py-6 font-bold shadow-sm" onClick={() => speakTip(latestReport?.coachingTips[0]?.voiceNote ?? t('default_coaching_note')) }>
+              <PlayCircle size={18} className="mr-2" /> {t('dashboard_play_coaching_note')}
             </Button>
           </Card>
 

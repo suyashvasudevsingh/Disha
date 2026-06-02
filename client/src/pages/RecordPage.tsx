@@ -207,12 +207,12 @@ export default function RecordPage() {
   const offlineState = syncStatus === 'offline' || queueCount > 0;
   const fallbackMode = !speech.isSupported || Boolean(speech.error) || Boolean(recorder.error);
   const statusLabel = recorder.isRecording
-    ? (speech.isSupported ? 'Live speech recognition' : 'Recording with fallback transcript')
+    ? (speech.isSupported ? t('record_status_live_stt') : t('record_status_fallback_recording'))
     : recorder.isPaused
-      ? 'Paused'
+      ? t('record_status_paused')
       : processingSession
-        ? 'Processing'
-        : (speech.isSupported ? 'Ready for live transcription' : 'Ready for fallback transcript');
+        ? t('record_status_processing')
+        : (speech.isSupported ? t('record_status_ready_live') : t('record_status_ready_fallback'));
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -223,12 +223,12 @@ export default function RecordPage() {
               <MicOff size={20} />
             </div>
             <div>
-              <h4 className="font-semibold text-rose-900">Microphone permission denied</h4>
-              <p className="text-sm text-rose-700/80 mt-0.5">Please allow microphone access in your browser settings to record your classroom lessons. You can still use the fallback demo mode below.</p>
+              <h4 className="font-semibold text-rose-900">{t('record_mic_denied_title')}</h4>
+              <p className="text-sm text-rose-700/80 mt-0.5">{t('record_mic_denied_desc')}</p>
             </div>
           </div>
           <Button onClick={requestPermission} className="rounded-2xl bg-rose-600 hover:bg-rose-700 text-white shrink-0">
-            Grant Access
+            {t('record_mic_denied_btn')}
           </Button>
         </div>
       )}
@@ -239,8 +239,8 @@ export default function RecordPage() {
             <CloudOff size={20} />
           </div>
           <div>
-            <h4 className="font-semibold text-amber-900">Microphone access unsupported</h4>
-            <p className="text-sm text-amber-700/80 mt-0.5">Your browser doesn't support microphone recording. Please use a modern browser like Chrome, Safari, or Firefox. fallbacks will be used.</p>
+            <h4 className="font-semibold text-amber-900">{t('record_mic_unsupported_title')}</h4>
+            <p className="text-sm text-amber-700/80 mt-0.5">{t('record_mic_unsupported_desc')}</p>
           </div>
         </div>
       )}
@@ -251,8 +251,8 @@ export default function RecordPage() {
             <Info size={20} />
           </div>
           <div>
-            <h4 className="font-semibold text-ink">Live speech-to-text unavailable</h4>
-            <p className="text-sm text-ink/60 mt-0.5">This browser doesn't support live speech recognition. The recording will save successfully, and a fallback transcript will be generated once recording ends.</p>
+            <h4 className="font-semibold text-ink">{t('record_stt_unsupported_title')}</h4>
+            <p className="text-sm text-ink/60 mt-0.5">{t('record_stt_unsupported_desc')}</p>
           </div>
         </div>
       )}
@@ -268,16 +268,16 @@ export default function RecordPage() {
             </Badge>
             {offlineState && (
               <Badge className="rounded-full bg-primary-light text-primary border-none px-3 py-1">
-                <CloudOff size={14} className="mr-1" /> Offline queue active
+                <CloudOff size={14} className="mr-1" /> {t('record_offline_queue')}
               </Badge>
             )}
           </div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">{t('start_recording')}</h1>
-          <p className="text-sm md:text-base text-ink/60 max-w-2xl">Capture a lesson, preview transcript progress, and generate AI coaching with deterministic fallback if live services fail.</p>
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">{t('record_page_title')}</h1>
+          <p className="text-sm md:text-base text-ink/60 max-w-2xl">{t('record_page_subtitle')}</p>
         </div>
 
         <div className="text-left sm:text-right space-y-1">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-ink/30">Timer</p>
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-ink/30">{t('record_timer_label')}</p>
           <div className="font-display text-5xl md:text-6xl font-bold tabular-nums">{formatTime(recorder.durationSeconds)}</div>
         </div>
       </div>
@@ -286,15 +286,15 @@ export default function RecordPage() {
         <Card className="rounded-[32px] border-primary-light bg-white shadow-sm overflow-hidden">
           <CardHeader className="border-b border-primary-light/70 px-5 sm:px-6 py-4 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-ink/30">Session control</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-ink/30">{t('record_session_control_label')}</p>
               <h2 className="text-xl font-display font-bold">{sessionTemplate.subject}</h2>
             </div>
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-2 text-xs font-semibold text-ink/50">
-                <Cpu size={15} /> {speech.isSupported ? 'Speech recognition ready' : 'Using fallback transcript'}
+                <Cpu size={15} /> {speech.isSupported ? t('record_speech_ready') : t('record_fallback_transcript')}
               </div>
               {!speech.isSupported && (
-                <p className="text-[10px] text-amber-600">Browser doesn't support STT</p>
+                <p className="text-[10px] text-amber-600">{t('record_browser_no_stt')}</p>
               )}
             </div>
           </CardHeader>
@@ -311,11 +311,11 @@ export default function RecordPage() {
                 <button
                   type="button"
                   onClick={recorder.isRecording ? stopRecording : startRecording}
-                  aria-label={recorder.isRecording ? 'Stop recording' : 'Start recording'}
+                  aria-label={recorder.isRecording ? t('record_button_stop') : t('record_button_start')}
                   className={`relative z-10 w-full h-full rounded-full flex flex-col items-center justify-center gap-3 shadow-2xl transition-transform active:scale-95 ${recorder.isRecording ? 'bg-white text-primary' : 'bg-primary text-white hover:scale-[1.02]'}`}
                 >
                   {recorder.isRecording ? <Square size={54} fill="currentColor" /> : <Mic size={54} strokeWidth={1.6} />}
-                  <span className="text-xs font-bold uppercase tracking-[0.25em]">{recorder.isRecording ? 'Tap to stop' : 'Tap to record'}</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.25em]">{recorder.isRecording ? t('record_button_tap_stop') : t('record_button_tap_start')}</span>
                   <span className="text-sm opacity-80">{formatTime(recorder.durationSeconds)}</span>
                 </button>                <div className="absolute -inset-x-3 bottom-2 flex items-end justify-center gap-1 h-20">
                   {recorder.levels.map((level, index) => (
@@ -332,13 +332,13 @@ export default function RecordPage() {
               <div className="flex flex-1 flex-wrap items-center justify-center lg:justify-end gap-3">
                 <Button variant="outline" onClick={recorder.isPaused ? handleResume : handlePause} disabled={!recorder.isRecording && !recorder.isPaused} className="h-12 rounded-2xl border-primary-light px-5 gap-2">
                   {recorder.isPaused ? <Play size={18} /> : <Pause size={18} />}
-                  {recorder.isPaused ? 'Resume' : 'Pause'}
+                  {recorder.isPaused ? t('record_button_resume') : t('record_button_pause')}
                 </Button>
                 <Button variant="outline" onClick={stopRecording} disabled={!recorder.isRecording && !recorder.isPaused} className="h-12 rounded-2xl border-primary-light px-5 gap-2 text-ink/70">
-                  <MicOff size={18} /> End session
+                  <MicOff size={18} /> {t('record_button_end_session')}
                 </Button>
                 <Button variant="outline" onClick={() => navigator.vibrate?.(18)} className="h-12 rounded-2xl border-primary-light px-5 gap-2 text-ink/60">
-                  <Waves size={18} /> Tactile ping
+                  <Waves size={18} /> {t('record_button_tactile_ping')}
                 </Button>
               </div>
             </div>
@@ -346,11 +346,11 @@ export default function RecordPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl bg-surface/80 p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink/35">Audio</p>
-                <p className="mt-1 font-semibold text-ink/70">{recorder.isSupported ? 'Microphone supported' : 'Browser fallback only'}</p>
+                <p className="mt-1 font-semibold text-ink/70">{recorder.isSupported ? t('record_audio_supported') : t('record_audio_fallback')}</p>
               </div>
               <div className="rounded-2xl bg-surface/80 p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink/35">Sync</p>
-                <p className="mt-1 font-semibold text-ink/70">{offlineState ? 'Offline queue pending' : 'Live sync available'}</p>
+                <p className="mt-1 font-semibold text-ink/70">{offlineState ? t('record_sync_offline') : t('record_sync_live')}</p>
               </div>
               <div className="rounded-2xl bg-surface/80 p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink/35">Progress</p>
